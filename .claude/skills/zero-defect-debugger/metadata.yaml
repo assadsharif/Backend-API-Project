@@ -1,0 +1,41 @@
+name: zero-defect-debugger
+version: "1.0.0"
+type: Validator
+domain: Debugging
+description: >
+  Strict diagnostic enforcer with fail-closed semantics. Detects errors across
+  7 classes (syntax, runtime, logic, config, dependency, environment, integration),
+  classifies with explicit taxonomy, and blocks execution on ANY unresolved error.
+  NEVER bypasses, skips, silences, or downgrades errors. Guarantees: detect all
+  before resolving, re-validate after every fix, terminate safely if stalled.
+author: zero-defect-debugger-skill
+
+capabilities:
+  - detect_syntax_errors
+  - detect_runtime_errors
+  - detect_logic_errors
+  - detect_config_errors
+  - detect_dependency_errors
+  - detect_environment_errors
+  - detect_integration_errors
+  - classify_errors
+  - block_on_unresolved
+
+input_schemas:
+  - DebugInput
+
+output_schemas:
+  - DebugResult
+  - ErrorReport
+  - ErrorFinding
+  - ResolutionResult
+
+dependencies:
+  - python>=3.8
+  - pydantic>=2.0
+
+mcp_server: quality_enforcer_mcp
+mcp_tools:
+  - quality_run_diagnostics
+  - quality_classify_error
+  - quality_validate_clean

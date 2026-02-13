@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <linearGradient id="nextGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#000000"/>
+      <stop offset="100%" style="stop-color:#171717"/>
+    </linearGradient>
+    <linearGradient id="reactGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#61dafb"/>
+      <stop offset="100%" style="stop-color:#00d8ff"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" fill="url(#bgGrad)"/>
+
+  <!-- Grid pattern -->
+  <g stroke="#334155" stroke-width="0.5" opacity="0.3">
+    <line x1="0" y1="50" x2="800" y2="50"/>
+    <line x1="0" y1="100" x2="800" y2="100"/>
+    <line x1="0" y1="150" x2="800" y2="150"/>
+    <line x1="0" y1="200" x2="800" y2="200"/>
+    <line x1="0" y1="250" x2="800" y2="250"/>
+    <line x1="0" y1="300" x2="800" y2="300"/>
+    <line x1="0" y1="350" x2="800" y2="350"/>
+    <line x1="100" y1="0" x2="100" y2="400"/>
+    <line x1="200" y1="0" x2="200" y2="400"/>
+    <line x1="300" y1="0" x2="300" y2="400"/>
+    <line x1="400" y1="0" x2="400" y2="400"/>
+    <line x1="500" y1="0" x2="500" y2="400"/>
+    <line x1="600" y1="0" x2="600" y2="400"/>
+    <line x1="700" y1="0" x2="700" y2="400"/>
+  </g>
+
+  <!-- Next.js logo representation -->
+  <g transform="translate(100, 160)">
+    <rect x="0" y="0" width="100" height="100" rx="15" fill="#000000" stroke="#ffffff" stroke-width="2"/>
+    <text x="50" y="60" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="32" font-weight="bold">N</text>
+    <text x="50" y="85" text-anchor="middle" fill="#888888" font-family="system-ui, sans-serif" font-size="12">next.js</text>
+  </g>
+
+  <!-- React atom icon -->
+  <g transform="translate(100, 100)" filter="url(#glow)">
+    <ellipse cx="50" cy="25" rx="30" ry="10" fill="none" stroke="#61dafb" stroke-width="1.5" transform="rotate(30 50 25)"/>
+    <ellipse cx="50" cy="25" rx="30" ry="10" fill="none" stroke="#61dafb" stroke-width="1.5" transform="rotate(-30 50 25)"/>
+    <ellipse cx="50" cy="25" rx="30" ry="10" fill="none" stroke="#61dafb" stroke-width="1.5"/>
+    <circle cx="50" cy="25" r="5" fill="#61dafb"/>
+  </g>
+
+  <!-- Arrow to MCP -->
+  <g filter="url(#glow)">
+    <path d="M220 200 Q280 180 330 200" stroke="#61dafb" stroke-width="3" fill="none" stroke-linecap="round">
+      <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite"/>
+    </path>
+    <polygon points="325,195 340,200 325,205" fill="#61dafb"/>
+  </g>
+
+  <!-- MCP Server box -->
+  <g transform="translate(345, 115)">
+    <rect x="0" y="0" width="200" height="170" rx="10" fill="#1e293b" stroke="#ffffff" stroke-width="2"/>
+    <rect x="0" y="0" width="200" height="35" rx="10" fill="#000000" opacity="0.3"/>
+    <text x="100" y="25" text-anchor="middle" fill="#ffffff" font-family="monospace" font-size="14" font-weight="bold">MCP SERVER</text>
+    <line x1="10" y1="35" x2="190" y2="35" stroke="#334155" stroke-width="1"/>
+
+    <!-- Tool list -->
+    <text x="15" y="55" fill="#94a3b8" font-family="monospace" font-size="9">scaffold_app</text>
+    <text x="15" y="70" fill="#94a3b8" font-family="monospace" font-size="9">generate_page</text>
+    <text x="15" y="85" fill="#94a3b8" font-family="monospace" font-size="9">generate_layout</text>
+    <text x="15" y="100" fill="#94a3b8" font-family="monospace" font-size="9">server_action</text>
+    <text x="105" y="55" fill="#94a3b8" font-family="monospace" font-size="9">api_client</text>
+    <text x="105" y="70" fill="#94a3b8" font-family="monospace" font-size="9">loading_error</text>
+    <text x="105" y="85" fill="#94a3b8" font-family="monospace" font-size="9">validate_struct</text>
+    <text x="105" y="100" fill="#94a3b8" font-family="monospace" font-size="9">diagnose_issues</text>
+
+    <!-- 8 tools badge -->
+    <rect x="140" y="130" width="50" height="20" rx="10" fill="#61dafb" opacity="0.2"/>
+    <text x="165" y="144" text-anchor="middle" fill="#61dafb" font-family="monospace" font-size="11" font-weight="bold">8 tools</text>
+  </g>
+
+  <!-- Output: App Router structure -->
+  <g transform="translate(590, 120)">
+    <!-- Folder structure -->
+    <rect x="0" y="0" width="140" height="170" rx="5" fill="#0f172a" stroke="#61dafb" stroke-width="1"/>
+    <text x="70" y="20" text-anchor="middle" fill="#61dafb" font-family="monospace" font-size="11" font-weight="bold">app/</text>
+
+    <text x="15" y="45" fill="#94a3b8" font-family="monospace" font-size="9">layout.tsx</text>
+    <text x="15" y="60" fill="#94a3b8" font-family="monospace" font-size="9">page.tsx</text>
+    <text x="15" y="75" fill="#94a3b8" font-family="monospace" font-size="9">loading.tsx</text>
+    <text x="15" y="90" fill="#94a3b8" font-family="monospace" font-size="9">error.tsx</text>
+    <text x="15" y="110" fill="#10b981" font-family="monospace" font-size="9">/api</text>
+    <text x="25" y="125" fill="#64748b" font-family="monospace" font-size="8">route.ts</text>
+    <text x="15" y="145" fill="#f59e0b" font-family="monospace" font-size="9">/[feature]</text>
+    <text x="25" y="160" fill="#64748b" font-family="monospace" font-size="8">page.tsx</text>
+  </g>
+
+  <!-- Arrow from MCP to output -->
+  <g filter="url(#glow)">
+    <path d="M545 200 L580 200" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round">
+      <animate attributeName="stroke-dasharray" values="0,50;50,0" dur="1s" repeatCount="indefinite"/>
+    </path>
+    <polygon points="575,195 590,200 575,205" fill="#ffffff"/>
+  </g>
+
+  <!-- Title -->
+  <text x="400" y="45" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="28" font-weight="bold">nextjs_app_router_mcp</text>
+  <text x="400" y="70" text-anchor="middle" fill="#64748b" font-family="system-ui, sans-serif" font-size="14">Next.js App Router Code Generation</text>
+
+  <!-- Bottom stats -->
+  <g transform="translate(160, 355)">
+    <rect x="0" y="0" width="90" height="30" rx="5" fill="#0f172a" stroke="#ffffff" stroke-width="1"/>
+    <text x="45" y="20" text-anchor="middle" fill="#ffffff" font-family="monospace" font-size="11">Next.js 14</text>
+  </g>
+  <g transform="translate(265, 355)">
+    <rect x="0" y="0" width="80" height="30" rx="5" fill="#0f172a" stroke="#61dafb" stroke-width="1"/>
+    <text x="40" y="20" text-anchor="middle" fill="#61dafb" font-family="monospace" font-size="11">44 tests</text>
+  </g>
+  <g transform="translate(360, 355)">
+    <rect x="0" y="0" width="90" height="30" rx="5" fill="#0f172a" stroke="#38bdf8" stroke-width="1"/>
+    <text x="45" y="20" text-anchor="middle" fill="#38bdf8" font-family="monospace" font-size="11">TypeScript</text>
+  </g>
+  <g transform="translate(465, 355)">
+    <rect x="0" y="0" width="100" height="30" rx="5" fill="#0f172a" stroke="#10b981" stroke-width="1"/>
+    <text x="50" y="20" text-anchor="middle" fill="#10b981" font-family="monospace" font-size="11">App Router</text>
+  </g>
+
+  <!-- Server/Client badge -->
+  <g transform="translate(720, 320)">
+    <rect x="0" y="0" width="50" height="20" rx="5" fill="#8b5cf6" opacity="0.3"/>
+    <text x="25" y="14" text-anchor="middle" fill="#8b5cf6" font-family="monospace" font-size="9">Server</text>
+    <rect x="0" y="25" width="50" height="20" rx="5" fill="#f59e0b" opacity="0.3"/>
+    <text x="25" y="39" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">Client</text>
+  </g>
+</svg>

@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <linearGradient id="fetchGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#06b6d4"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="dataGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#22d3ee"/>
+      <stop offset="100%" style="stop-color:#0ea5e9"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" fill="url(#bgGrad)"/>
+
+  <!-- Grid pattern -->
+  <g stroke="#334155" stroke-width="0.5" opacity="0.3">
+    <line x1="0" y1="50" x2="800" y2="50"/>
+    <line x1="0" y1="100" x2="800" y2="100"/>
+    <line x1="0" y1="150" x2="800" y2="150"/>
+    <line x1="0" y1="200" x2="800" y2="200"/>
+    <line x1="0" y1="250" x2="800" y2="250"/>
+    <line x1="0" y1="300" x2="800" y2="300"/>
+    <line x1="0" y1="350" x2="800" y2="350"/>
+    <line x1="100" y1="0" x2="100" y2="400"/>
+    <line x1="200" y1="0" x2="200" y2="400"/>
+    <line x1="300" y1="0" x2="300" y2="400"/>
+    <line x1="400" y1="0" x2="400" y2="400"/>
+    <line x1="500" y1="0" x2="500" y2="400"/>
+    <line x1="600" y1="0" x2="600" y2="400"/>
+    <line x1="700" y1="0" x2="700" y2="400"/>
+  </g>
+
+  <!-- Globe/Web icon -->
+  <g transform="translate(140, 200)">
+    <circle cx="0" cy="0" r="60" fill="none" stroke="url(#fetchGrad)" stroke-width="3" filter="url(#glow)"/>
+    <ellipse cx="0" cy="0" rx="60" ry="25" fill="none" stroke="#06b6d4" stroke-width="1.5" opacity="0.7"/>
+    <ellipse cx="0" cy="0" rx="25" ry="60" fill="none" stroke="#06b6d4" stroke-width="1.5" opacity="0.7"/>
+    <line x1="-60" y1="0" x2="60" y2="0" stroke="#06b6d4" stroke-width="1.5" opacity="0.5"/>
+    <line x1="0" y1="-60" x2="0" y2="60" stroke="#06b6d4" stroke-width="1.5" opacity="0.5"/>
+  </g>
+
+  <!-- Data flow arrows -->
+  <g filter="url(#glow)">
+    <path d="M220 180 Q280 160 340 180" stroke="url(#dataGrad)" stroke-width="3" fill="none" stroke-linecap="round">
+      <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite"/>
+    </path>
+    <path d="M220 200 L340 200" stroke="url(#dataGrad)" stroke-width="3" fill="none" stroke-linecap="round">
+      <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="1.5s" repeatCount="indefinite"/>
+    </path>
+    <path d="M220 220 Q280 240 340 220" stroke="url(#dataGrad)" stroke-width="3" fill="none" stroke-linecap="round">
+      <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite"/>
+    </path>
+    <!-- Arrow heads -->
+    <polygon points="340,175 355,180 340,185" fill="#22d3ee"/>
+    <polygon points="340,195 355,200 340,205" fill="#22d3ee"/>
+    <polygon points="340,215 355,220 340,225" fill="#22d3ee"/>
+  </g>
+
+  <!-- MCP Server box -->
+  <g transform="translate(360, 130)">
+    <rect x="0" y="0" width="200" height="140" rx="10" fill="#1e293b" stroke="url(#fetchGrad)" stroke-width="2"/>
+    <rect x="0" y="0" width="200" height="35" rx="10" fill="url(#fetchGrad)" opacity="0.2"/>
+    <text x="100" y="25" text-anchor="middle" fill="#22d3ee" font-family="monospace" font-size="14" font-weight="bold">MCP SERVER</text>
+    <line x1="10" y1="35" x2="190" y2="35" stroke="#334155" stroke-width="1"/>
+
+    <!-- Tool list -->
+    <text x="15" y="55" fill="#94a3b8" font-family="monospace" font-size="10">fetch_url</text>
+    <text x="15" y="70" fill="#94a3b8" font-family="monospace" font-size="10">fetch_html</text>
+    <text x="15" y="85" fill="#94a3b8" font-family="monospace" font-size="10">fetch_json</text>
+    <text x="15" y="100" fill="#94a3b8" font-family="monospace" font-size="10">fetch_text</text>
+    <text x="105" y="55" fill="#94a3b8" font-family="monospace" font-size="10">fetch_headers</text>
+    <text x="105" y="70" fill="#94a3b8" font-family="monospace" font-size="10">extract_links</text>
+    <text x="105" y="85" fill="#94a3b8" font-family="monospace" font-size="10">validate_url</text>
+    <text x="105" y="100" fill="#94a3b8" font-family="monospace" font-size="10">check_avail</text>
+
+    <!-- 8 tools badge -->
+    <rect x="140" y="115" width="50" height="20" rx="10" fill="#06b6d4" opacity="0.2"/>
+    <text x="165" y="129" text-anchor="middle" fill="#22d3ee" font-family="monospace" font-size="11" font-weight="bold">8 tools</text>
+  </g>
+
+  <!-- Output data blocks -->
+  <g transform="translate(600, 145)">
+    <rect x="0" y="0" width="120" height="25" rx="4" fill="#0f172a" stroke="#22d3ee" stroke-width="1" opacity="0.8"/>
+    <text x="60" y="17" text-anchor="middle" fill="#22d3ee" font-family="monospace" font-size="10">{json: data}</text>
+
+    <rect x="0" y="35" width="120" height="25" rx="4" fill="#0f172a" stroke="#3b82f6" stroke-width="1" opacity="0.8"/>
+    <text x="60" y="52" text-anchor="middle" fill="#3b82f6" font-family="monospace" font-size="10">&lt;html&gt;...&lt;/html&gt;</text>
+
+    <rect x="0" y="70" width="120" height="25" rx="4" fill="#0f172a" stroke="#8b5cf6" stroke-width="1" opacity="0.8"/>
+    <text x="60" y="87" text-anchor="middle" fill="#8b5cf6" font-family="monospace" font-size="10">plain text</text>
+
+    <rect x="0" y="105" width="120" height="25" rx="4" fill="#0f172a" stroke="#06b6d4" stroke-width="1" opacity="0.8"/>
+    <text x="60" y="122" text-anchor="middle" fill="#06b6d4" font-family="monospace" font-size="10">headers: {...}</text>
+  </g>
+
+  <!-- Title -->
+  <text x="400" y="45" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="28" font-weight="bold">web_content_fetch_mcp</text>
+  <text x="400" y="70" text-anchor="middle" fill="#64748b" font-family="system-ui, sans-serif" font-size="14">Secure Web Content Fetching via MCP Protocol</text>
+
+  <!-- Bottom stats -->
+  <g transform="translate(200, 355)">
+    <rect x="0" y="0" width="100" height="30" rx="5" fill="#0f172a" stroke="#22d3ee" stroke-width="1"/>
+    <text x="50" y="20" text-anchor="middle" fill="#22d3ee" font-family="monospace" font-size="12">httpx async</text>
+  </g>
+  <g transform="translate(320, 355)">
+    <rect x="0" y="0" width="80" height="30" rx="5" fill="#0f172a" stroke="#3b82f6" stroke-width="1"/>
+    <text x="40" y="20" text-anchor="middle" fill="#3b82f6" font-family="monospace" font-size="12">54 tests</text>
+  </g>
+  <g transform="translate(420, 355)">
+    <rect x="0" y="0" width="80" height="30" rx="5" fill="#0f172a" stroke="#10b981" stroke-width="1"/>
+    <text x="40" y="20" text-anchor="middle" fill="#10b981" font-family="monospace" font-size="12">URL safe</text>
+  </g>
+  <g transform="translate(520, 355)">
+    <rect x="0" y="0" width="80" height="30" rx="5" fill="#0f172a" stroke="#8b5cf6" stroke-width="1"/>
+    <text x="40" y="20" text-anchor="middle" fill="#8b5cf6" font-family="monospace" font-size="12">FastMCP</text>
+  </g>
+
+  <!-- Security shield icon -->
+  <g transform="translate(730, 330)">
+    <path d="M0,-25 L20,-15 L20,10 Q20,25 0,35 Q-20,25 -20,10 L-20,-15 Z" fill="none" stroke="#10b981" stroke-width="2" filter="url(#glow)"/>
+    <path d="M-8,0 L-2,8 L10,-8" stroke="#10b981" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

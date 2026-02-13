@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <linearGradient id="ormGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8b5cf6"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+    <linearGradient id="tableGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#4f46e5"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" fill="url(#bgGrad)"/>
+
+  <!-- Grid pattern -->
+  <g stroke="#334155" stroke-width="0.5" opacity="0.3">
+    <line x1="0" y1="50" x2="800" y2="50"/>
+    <line x1="0" y1="100" x2="800" y2="100"/>
+    <line x1="0" y1="150" x2="800" y2="150"/>
+    <line x1="0" y1="200" x2="800" y2="200"/>
+    <line x1="0" y1="250" x2="800" y2="250"/>
+    <line x1="0" y1="300" x2="800" y2="300"/>
+    <line x1="0" y1="350" x2="800" y2="350"/>
+    <line x1="100" y1="0" x2="100" y2="400"/>
+    <line x1="200" y1="0" x2="200" y2="400"/>
+    <line x1="300" y1="0" x2="300" y2="400"/>
+    <line x1="400" y1="0" x2="400" y2="400"/>
+    <line x1="500" y1="0" x2="500" y2="400"/>
+    <line x1="600" y1="0" x2="600" y2="400"/>
+    <line x1="700" y1="0" x2="700" y2="400"/>
+  </g>
+
+  <!-- Database cylinder icon -->
+  <g transform="translate(100, 180)">
+    <ellipse cx="50" cy="0" rx="40" ry="15" fill="url(#tableGrad)" stroke="#8b5cf6" stroke-width="2"/>
+    <rect x="10" y="0" width="80" height="80" fill="url(#tableGrad)"/>
+    <ellipse cx="50" cy="80" rx="40" ry="15" fill="url(#tableGrad)" stroke="#8b5cf6" stroke-width="2"/>
+    <ellipse cx="50" cy="0" rx="40" ry="15" fill="none" stroke="#a855f7" stroke-width="2" filter="url(#glow)"/>
+    <!-- Table rows -->
+    <line x1="15" y1="25" x2="85" y2="25" stroke="#c4b5fd" stroke-width="1" opacity="0.5"/>
+    <line x1="15" y1="45" x2="85" y2="45" stroke="#c4b5fd" stroke-width="1" opacity="0.5"/>
+    <line x1="15" y1="65" x2="85" y2="65" stroke="#c4b5fd" stroke-width="1" opacity="0.5"/>
+  </g>
+
+  <!-- Python/Pydantic icon -->
+  <g transform="translate(100, 100)">
+    <rect x="20" y="0" width="60" height="40" rx="5" fill="#0f172a" stroke="#fbbf24" stroke-width="2"/>
+    <text x="50" y="26" text-anchor="middle" fill="#fbbf24" font-family="monospace" font-size="12" font-weight="bold">Py</text>
+  </g>
+
+  <!-- Arrow from Python to MCP -->
+  <g filter="url(#glow)">
+    <path d="M200 200 Q260 180 320 200" stroke="#a855f7" stroke-width="3" fill="none" stroke-linecap="round">
+      <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite"/>
+    </path>
+    <polygon points="315,195 330,200 315,205" fill="#a855f7"/>
+  </g>
+
+  <!-- MCP Server box -->
+  <g transform="translate(330, 120)">
+    <rect x="0" y="0" width="200" height="160" rx="10" fill="#1e293b" stroke="url(#ormGrad)" stroke-width="2"/>
+    <rect x="0" y="0" width="200" height="35" rx="10" fill="url(#ormGrad)" opacity="0.2"/>
+    <text x="100" y="25" text-anchor="middle" fill="#a855f7" font-family="monospace" font-size="14" font-weight="bold">MCP SERVER</text>
+    <line x1="10" y1="35" x2="190" y2="35" stroke="#334155" stroke-width="1"/>
+
+    <!-- Tool list -->
+    <text x="15" y="55" fill="#94a3b8" font-family="monospace" font-size="9">generate_table</text>
+    <text x="15" y="70" fill="#94a3b8" font-family="monospace" font-size="9">generate_schemas</text>
+    <text x="15" y="85" fill="#94a3b8" font-family="monospace" font-size="9">generate_relationship</text>
+    <text x="15" y="100" fill="#94a3b8" font-family="monospace" font-size="9">generate_crud</text>
+    <text x="105" y="55" fill="#94a3b8" font-family="monospace" font-size="9">generate_queries</text>
+    <text x="105" y="70" fill="#94a3b8" font-family="monospace" font-size="9">database_config</text>
+    <text x="105" y="85" fill="#94a3b8" font-family="monospace" font-size="9">validate_model</text>
+    <text x="105" y="100" fill="#94a3b8" font-family="monospace" font-size="9">diagnose_issues</text>
+
+    <!-- 8 tools badge -->
+    <rect x="140" y="125" width="50" height="20" rx="10" fill="#8b5cf6" opacity="0.2"/>
+    <text x="165" y="139" text-anchor="middle" fill="#a855f7" font-family="monospace" font-size="11" font-weight="bold">8 tools</text>
+  </g>
+
+  <!-- Output models -->
+  <g transform="translate(580, 130)">
+    <!-- Table model -->
+    <rect x="0" y="0" width="140" height="50" rx="5" fill="#0f172a" stroke="#6366f1" stroke-width="2"/>
+    <text x="70" y="20" text-anchor="middle" fill="#6366f1" font-family="monospace" font-size="10" font-weight="bold">class Todo</text>
+    <text x="70" y="38" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="8">(SQLModel, table=True)</text>
+
+    <!-- Schema models -->
+    <rect x="0" y="60" width="140" height="40" rx="5" fill="#0f172a" stroke="#8b5cf6" stroke-width="2"/>
+    <text x="70" y="78" text-anchor="middle" fill="#8b5cf6" font-family="monospace" font-size="9">TodoCreate | Update | Read</text>
+
+    <!-- CRUD -->
+    <rect x="0" y="110" width="140" height="35" rx="5" fill="#0f172a" stroke="#ec4899" stroke-width="2"/>
+    <text x="70" y="132" text-anchor="middle" fill="#ec4899" font-family="monospace" font-size="9">CRUD Operations</text>
+
+    <!-- Queries -->
+    <rect x="0" y="155" width="140" height="35" rx="5" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+    <text x="70" y="177" text-anchor="middle" fill="#10b981" font-family="monospace" font-size="9">select().where()</text>
+  </g>
+
+  <!-- Arrow from MCP to output -->
+  <g filter="url(#glow)">
+    <path d="M530 200 L570 200" stroke="#a855f7" stroke-width="3" fill="none" stroke-linecap="round">
+      <animate attributeName="stroke-dasharray" values="0,50;50,0" dur="1s" repeatCount="indefinite"/>
+    </path>
+    <polygon points="565,195 580,200 565,205" fill="#a855f7"/>
+  </g>
+
+  <!-- Title -->
+  <text x="400" y="45" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="28" font-weight="bold">sqlmodel_orm_mcp</text>
+  <text x="400" y="70" text-anchor="middle" fill="#64748b" font-family="system-ui, sans-serif" font-size="14">Type-Safe SQLModel ORM Code Generation</text>
+
+  <!-- Bottom stats -->
+  <g transform="translate(180, 355)">
+    <rect x="0" y="0" width="85" height="30" rx="5" fill="#0f172a" stroke="#8b5cf6" stroke-width="1"/>
+    <text x="42" y="20" text-anchor="middle" fill="#8b5cf6" font-family="monospace" font-size="11">SQLModel</text>
+  </g>
+  <g transform="translate(280, 355)">
+    <rect x="0" y="0" width="80" height="30" rx="5" fill="#0f172a" stroke="#6366f1" stroke-width="1"/>
+    <text x="40" y="20" text-anchor="middle" fill="#6366f1" font-family="monospace" font-size="11">49 tests</text>
+  </g>
+  <g transform="translate(375, 355)">
+    <rect x="0" y="0" width="85" height="30" rx="5" fill="#0f172a" stroke="#fbbf24" stroke-width="1"/>
+    <text x="42" y="20" text-anchor="middle" fill="#fbbf24" font-family="monospace" font-size="11">Pydantic v2</text>
+  </g>
+  <g transform="translate(475, 355)">
+    <rect x="0" y="0" width="80" height="30" rx="5" fill="#0f172a" stroke="#10b981" stroke-width="1"/>
+    <text x="40" y="20" text-anchor="middle" fill="#10b981" font-family="monospace" font-size="11">FastAPI</text>
+  </g>
+
+  <!-- Relationship connector icon -->
+  <g transform="translate(730, 320)">
+    <circle cx="0" cy="0" r="8" fill="#ec4899" opacity="0.8"/>
+    <line x1="0" y1="0" x2="30" y2="0" stroke="#ec4899" stroke-width="2"/>
+    <circle cx="30" cy="0" r="8" fill="#ec4899" opacity="0.8"/>
+    <text x="15" y="25" text-anchor="middle" fill="#ec4899" font-family="monospace" font-size="9">1:N</text>
+  </g>
+</svg>

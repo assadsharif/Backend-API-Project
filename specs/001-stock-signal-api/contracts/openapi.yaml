@@ -1,0 +1,555 @@
+openapi: 3.0.3
+info:
+  title: Stock Signal API
+  description: |
+    REST API for stock trading signals based on technical analysis.
+
+    Provides buy/sell/hold recommendations with confidence levels and reasoning based on
+    technical indicators (RSI, MACD, SMA, EMA) calculated from historical price data.
+
+    **Data Source**: Yahoo Finance (15-minute delay)
+    **Supported Markets**: US stocks only (NYSE, NASDAQ)
+    **Cache TTL**: 15 minutes
+  version: 1.0.0
+  contact:
+    name: API Support
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.stocksignal.example.com
+    description: Production server (placeholder)
+
+tags:
+  - name: signals
+    description: Trading signal generation
+  - name: indicators
+    description: Technical indicator data
+  - name: health
+    description: Service health checks
+
+paths:
+  /signal/{ticker}:
+    get:
+      tags:
+        - signals
+      summary: Get trading signal for a stock
+      description: |
+        Returns a buy/sell/hold trading signal for the specified stock ticker based on
+        technical analysis of RSI, MACD, and moving averages.
+
+        **Response time**: <2s for cached data, <1s typical for uncached
+
+        **Functional Requirements**: FR-001, FR-006, FR-009, FR-011, FR-012
+        **User Story**: P1 - Get Stock Trading Signal
+      operationId: getSignal
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          description: Stock ticker symbol (1-5 uppercase alphanumeric characters, US stocks only)
+          schema:
+            type: string
+            pattern: '^[A-Z0-9]{1,5}$'
+            example: AAPL
+      responses:
+        '200':
+          description: Signal generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Signal'
+              examples:
+                buySignal:
+                  summary: Strong BUY signal
+                  value:
+                    ticker: AAPL
+                    signal: BUY
+                    confidence: 80
+                    reasoning: "Strong BUY signal: RSI at 28.5 (oversold), MACD bullish crossover detected, price above 50-day SMA ($175.20 > $172.50)"
+                    timestamp: "2026-02-13T14:30:00Z"
+                    data_freshness: "2026-02-13T14:15:00Z"
+                    current_price: 175.20
+                    indicators:
+                      rsi: 28.5
+                      macd:
+                        line: 1.25
+                        signal: 0.95
+                        histogram: 0.30
+                      sma:
+                        20_day: 170.50
+                        50_day: 172.50
+                        200_day: 165.00
+                      ema:
+                        12_day: 173.80
+                        26_day: 171.20
+                sellSignal:
+                  summary: SELL signal
+                  value:
+                    ticker: TSLA
+                    signal: SELL
+                    confidence: 60
+                    reasoning: "SELL signal: RSI at 72.3 (overbought), price below 200-day SMA ($150.00 < $155.50)"
+                    timestamp: "2026-02-13T14:30:00Z"
+                    data_freshness: "2026-02-13T14:15:00Z"
+                    current_price: 150.00
+                    indicators:
+                      rsi: 72.3
+                      macd:
+                        line: -0.85
+                        signal: -0.45
+                        histogram: -0.40
+                      sma:
+                        20_day: 152.00
+                        50_day: 158.00
+                        200_day: 155.50
+                      ema:
+                        12_day: 151.20
+                        26_day: 154.80
+                holdSignal:
+                  summary: HOLD signal (neutral indicators)
+                  value:
+                    ticker: MSFT
+                    signal: HOLD
+                    confidence: 20
+                    reasoning: "HOLD signal: Mixed indicators - RSI neutral at 55, MACD shows no clear trend, price near moving averages"
+                    timestamp: "2026-02-13T14:30:00Z"
+                    data_freshness: "2026-02-13T14:15:00Z"
+                    current_price: 380.50
+                    indicators:
+                      rsi: 55.0
+                      macd:
+                        line: 0.15
+                        signal: 0.18
+                        histogram: -0.03
+                      sma:
+                        20_day: 378.00
+                        50_day: 375.00
+                        200_day: 360.00
+                      ema:
+                        12_day: 379.50
+                        26_day: 377.00
+                partialData:
+                  summary: Partial data (new IPO)
+                  value:
+                    ticker: NEWCO
+                    signal: HOLD
+                    confidence: 30
+                    reasoning: "HOLD signal: Limited data (only 50 days available). RSI at 45.2 (neutral), price above 20-day SMA. Unable to assess long-term trend (200-day SMA unavailable)."
+                    timestamp: "2026-02-13T14:30:00Z"
+                    data_freshness: "2026-02-13T14:15:00Z"
+                    current_price: 102.75
+                    indicators:
+                      rsi: 45.2
+                      macd:
+                        line: 0.45
+                        signal: 0.38
+                        histogram: 0.07
+                      sma:
+                        20_day: 102.50
+                        50_day: null
+                        200_day: null
+                      ema:
+                        12_day: 103.20
+                        26_day: 102.80
+        '400':
+          description: Invalid ticker symbol
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: invalid_ticker
+                message: "Invalid ticker symbol 'XYZ123'. Ticker must be 1-5 uppercase alphanumeric characters for US stocks (NYSE, NASDAQ)."
+                ticker: XYZ123
+        '404':
+          description: Ticker not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: ticker_not_found
+                message: "Ticker 'INVALID' not found. Please verify the ticker symbol."
+                ticker: INVALID
+        '503':
+          description: Data source unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableError'
+              example:
+                error: data_source_unavailable
+                message: "Unable to fetch price data for AAPL. Data source (Yahoo Finance) is currently unavailable."
+                retry_after: 300
+                ticker: AAPL
+
+  /indicators/{ticker}:
+    get:
+      tags:
+        - indicators
+      summary: Get technical indicators for a stock
+      description: |
+        Returns calculated technical indicators (RSI, MACD, SMA, EMA) without generating
+        a trading signal. Useful for transparency and custom analysis.
+
+        **User Story**: P2 - View Technical Indicators
+        **Functional Requirements**: FR-002, FR-003, FR-004, FR-005
+      operationId: getIndicators
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          description: Stock ticker symbol (1-5 uppercase alphanumeric characters)
+          schema:
+            type: string
+            pattern: '^[A-Z0-9]{1,5}$'
+            example: AAPL
+      responses:
+        '200':
+          description: Indicators calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndicatorResponse'
+              example:
+                ticker: AAPL
+                calculated_at: "2026-02-13T14:30:00Z"
+                current_price: 175.20
+                indicators:
+                  rsi: 28.5
+                  macd:
+                    line: 1.25
+                    signal: 0.95
+                    histogram: 0.30
+                  sma:
+                    20_day: 170.50
+                    50_day: 172.50
+                    200_day: 165.00
+                  ema:
+                    12_day: 173.80
+                    26_day: 171.20
+        '400':
+          description: Invalid ticker symbol
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ticker not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Data source unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUnavailableError'
+
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check endpoint
+      description: Returns service health status and data source availability
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: healthy
+                timestamp: "2026-02-13T14:30:00Z"
+                version: "1.0.0"
+                data_source:
+                  provider: yahoo_finance
+                  status: available
+                  last_check: "2026-02-13T14:29:55Z"
+        '503':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: degraded
+                timestamp: "2026-02-13T14:30:00Z"
+                version: "1.0.0"
+                data_source:
+                  provider: yahoo_finance
+                  status: unavailable
+                  last_check: "2026-02-13T14:29:55Z"
+
+components:
+  schemas:
+    Signal:
+      type: object
+      required:
+        - ticker
+        - signal
+        - confidence
+        - reasoning
+        - timestamp
+        - data_freshness
+        - current_price
+        - indicators
+      properties:
+        ticker:
+          type: string
+          pattern: '^[A-Z0-9]{1,5}$'
+          description: Stock ticker symbol
+          example: AAPL
+        signal:
+          type: string
+          enum: [BUY, SELL, HOLD]
+          description: Trading recommendation
+          example: BUY
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Confidence level (0-100%)
+          example: 80
+        reasoning:
+          type: string
+          minLength: 20
+          maxLength: 500
+          description: Human-readable explanation of signal generation
+          example: "Strong BUY signal: RSI at 28.5 (oversold), MACD bullish crossover detected, price above 50-day SMA ($175.20 > $172.50)"
+        timestamp:
+          type: string
+          format: date-time
+          description: When signal was generated (UTC, ISO 8601)
+          example: "2026-02-13T14:30:00Z"
+        data_freshness:
+          type: string
+          format: date-time
+          description: Timestamp of underlying price data (UTC, ISO 8601)
+          example: "2026-02-13T14:15:00Z"
+        current_price:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Current stock price (2 decimal places)
+          example: 175.20
+        indicators:
+          $ref: '#/components/schemas/Indicators'
+
+    Indicators:
+      type: object
+      required:
+        - rsi
+        - macd
+        - sma
+        - ema
+      properties:
+        rsi:
+          type: number
+          format: decimal
+          nullable: true
+          minimum: 0
+          maximum: 100
+          description: Relative Strength Index (14-period, 0-100 range)
+          example: 28.5
+        macd:
+          $ref: '#/components/schemas/MACD'
+        sma:
+          $ref: '#/components/schemas/SMA'
+        ema:
+          $ref: '#/components/schemas/EMA'
+
+    MACD:
+      type: object
+      required:
+        - line
+        - signal
+        - histogram
+      properties:
+        line:
+          type: number
+          format: decimal
+          nullable: true
+          description: MACD line (12-EMA minus 26-EMA)
+          example: 1.25
+        signal:
+          type: number
+          format: decimal
+          nullable: true
+          description: MACD signal line (9-EMA of MACD line)
+          example: 0.95
+        histogram:
+          type: number
+          format: decimal
+          nullable: true
+          description: MACD histogram (MACD line minus signal line)
+          example: 0.30
+
+    SMA:
+      type: object
+      required:
+        - 20_day
+        - 50_day
+        - 200_day
+      properties:
+        20_day:
+          type: number
+          format: decimal
+          nullable: true
+          description: 20-day Simple Moving Average
+          example: 170.50
+        50_day:
+          type: number
+          format: decimal
+          nullable: true
+          description: 50-day Simple Moving Average
+          example: 172.50
+        200_day:
+          type: number
+          format: decimal
+          nullable: true
+          description: 200-day Simple Moving Average
+          example: 165.00
+
+    EMA:
+      type: object
+      required:
+        - 12_day
+        - 26_day
+      properties:
+        12_day:
+          type: number
+          format: decimal
+          nullable: true
+          description: 12-day Exponential Moving Average
+          example: 173.80
+        26_day:
+          type: number
+          format: decimal
+          nullable: true
+          description: 26-day Exponential Moving Average
+          example: 171.20
+
+    IndicatorResponse:
+      type: object
+      required:
+        - ticker
+        - calculated_at
+        - current_price
+        - indicators
+      properties:
+        ticker:
+          type: string
+          pattern: '^[A-Z0-9]{1,5}$'
+          description: Stock ticker symbol
+          example: AAPL
+        calculated_at:
+          type: string
+          format: date-time
+          description: When indicators were calculated (UTC, ISO 8601)
+          example: "2026-02-13T14:30:00Z"
+        current_price:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Current stock price
+          example: 175.20
+        indicators:
+          $ref: '#/components/schemas/Indicators'
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: invalid_ticker
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid ticker symbol 'XYZ123'. Ticker must be 1-5 uppercase alphanumeric characters."
+        ticker:
+          type: string
+          description: Ticker that caused the error (if applicable)
+          example: XYZ123
+
+    ServiceUnavailableError:
+      type: object
+      required:
+        - error
+        - message
+        - retry_after
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: data_source_unavailable
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Unable to fetch price data. Data source (Yahoo Finance) is currently unavailable."
+        retry_after:
+          type: integer
+          description: Suggested retry delay in seconds
+          example: 300
+        ticker:
+          type: string
+          description: Ticker that was requested (if applicable)
+          example: AAPL
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+        - version
+        - data_source
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall service health
+          example: healthy
+        timestamp:
+          type: string
+          format: date-time
+          description: Health check timestamp (UTC, ISO 8601)
+          example: "2026-02-13T14:30:00Z"
+        version:
+          type: string
+          description: API version
+          example: "1.0.0"
+        data_source:
+          type: object
+          required:
+            - provider
+            - status
+            - last_check
+          properties:
+            provider:
+              type: string
+              description: Data provider name
+              example: yahoo_finance
+            status:
+              type: string
+              enum: [available, unavailable]
+              description: Data provider availability
+              example: available
+            last_check:
+              type: string
+              format: date-time
+              description: Last health check timestamp (UTC, ISO 8601)
+              example: "2026-02-13T14:29:55Z"
+
+  securitySchemes: {}
+
+security: []

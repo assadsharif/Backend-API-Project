@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # Web Dashboard
+  dashboard:
+    build: .
+    container_name: fte-dashboard
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./:/app
+      - vault-data:/vault
+      - ./logs:/app/logs
+    environment:
+      - VAULT_DIR=/vault
+      - FLASK_ENV=production
+    command: python3 -m src.dashboard.app
+    restart: unless-stopped
+    networks:
+      - fte-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Filesystem Watcher
+  filesystem-watcher:
+    build: .
+    container_name: fte-filesystem-watcher
+    volumes:
+      - ./:/app
+      - vault-data:/vault
+      - ./logs:/app/logs
+    environment:
+      - VAULT_DIR=/vault
+      - WATCH_DIR=/vault/watch
+    command: python3 -m src.watchers.filesystem_watcher
+    restart: unless-stopped
+    networks:
+      - fte-network
+    depends_on:
+      - dashboard
+
+  # Orchestrator (Ralph Wiggum Loop)
+  orchestrator:
+    build: .
+    container_name: fte-orchestrator
+    volumes:
+      - ./:/app
+      - vault-data:/vault
+      - ./logs:/app/logs
+    environment:
+      - VAULT_DIR=/vault
+      - ORCHESTRATOR_INTERVAL=300
+    command: python3 -m src.orchestrator.scheduler
+    restart: unless-stopped
+    networks:
+      - fte-network
+    depends_on:
+      - dashboard
+
+  # Gmail Watcher (requires credentials)
+  # gmail-watcher:
+  #   build: .
+  #   container_name: fte-gmail-watcher
+  #   volumes:
+  #     - ./:/app
+  #     - vault-data:/vault
+  #     - ./logs:/app/logs
+  #     - ./credentials:/credentials:ro
+  #   environment:
+  #     - VAULT_DIR=/vault
+  #     - GMAIL_CREDENTIALS=/credentials/gmail_credentials.json
+  #   command: python3 /tmp/start_gmail_watcher.py
+  #   restart: unless-stopped
+  #   networks:
+  #     - fte-network
+
+volumes:
+  vault-data:
+    driver: local
+
+networks:
+  fte-network:
+    driver: bridge
