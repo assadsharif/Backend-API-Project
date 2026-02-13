@@ -1,0 +1,90 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "file-driven-control-plane"
+version = "0.1.0"
+description = "File-driven state machine for Digital FTE task workflow management"
+requires-python = ">=3.11"
+dependencies = [
+    "duckdb>=0.9.0",
+    "watchdog>=3.0.0",
+    "pathspec>=0.11.0",
+    "PyYAML>=6.0",
+    "python-ulid>=2.0.0",
+    "structlog>=23.0.0",
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "typer>=0.9.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "requests>=2.31.0",
+    "mcp[cli]>=1.0.0",
+    "keyring>=24.0.0",
+    "jinja2>=3.1.0",
+    "fpdf2>=2.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "detect-secrets>=1.4.0",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-click>=1.1.0",
+    "pytest-asyncio>=0.21.0",
+    "hypothesis>=6.0.0",
+]
+gmail = [
+    "google-auth>=2.23.0",
+    "google-auth-oauthlib>=1.1.0",
+    "google-api-python-client>=2.100.0",
+    "markdownify>=0.11.0",
+]
+watchers = [
+    "google-auth>=2.23.0",
+    "google-auth-oauthlib>=1.1.0",
+    "google-api-python-client>=2.100.0",
+    "markdownify>=0.11.0",
+    "flask>=3.0.0",
+]
+
+[project.scripts]
+fte = "cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
+
+[tool.coverage.run]
+source = ["src/control_plane"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

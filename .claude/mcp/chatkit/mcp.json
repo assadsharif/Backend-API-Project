@@ -1,0 +1,248 @@
+{
+  "name": "chatkit",
+  "description": "Chat widget integration design intelligence for cross-platform conversational interfaces",
+  "version": "1.0.0",
+  "type": "design-intelligence",
+  "capabilities": [
+    "Event-driven architecture validation",
+    "Widget state machine design",
+    "Session continuity patterns",
+    "Progressive loading strategies",
+    "Citation rendering guidance",
+    "Graceful degradation planning",
+    "Feature discovery UX patterns",
+    "Multi-modal input design (text, voice, image)"
+  ],
+  "supported_patterns": [
+    "Event-Driven Widget Architecture",
+    "Progressive Widget Loading",
+    "Session Continuity with Tier Upgrades",
+    "Citation-Aware Message Rendering",
+    "Graceful Degradation for Network Failures",
+    "Contextual Feature Discovery"
+  ],
+  "integration_scope": [
+    "Documentation platforms (Docusaurus, VitePress, GitBook)",
+    "Educational platforms (MOOCs, course platforms)",
+    "Enterprise knowledge bases (Confluence, Notion)",
+    "SaaS applications (productivity, analytics)",
+    "E-commerce (product Q&A, visual search)",
+    "Healthcare (symptom checkers, patient portals)"
+  ],
+  "integrations": {
+    "skills": [
+      "rag-chatbot",
+      "signup-personalization"
+    ],
+    "agents": [
+      "rag-orchestration"
+    ],
+    "mcp_servers": [
+      "better-auth"
+    ]
+  },
+  "event_schema": {
+    "user_message": {
+      "required": ["session_id", "message"],
+      "properties": {
+        "session_id": {"type": "string", "format": "uuid"},
+        "message": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "string"},
+            "type": {"enum": ["text", "voice", "image"]},
+            "content": {"type": "string"},
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "mode": {"enum": ["full-corpus", "selected-text"]},
+                "selected_text": {"type": "string", "nullable": true},
+                "context": {
+                  "type": "object",
+                  "properties": {
+                    "current_page": {"type": "string"},
+                    "user_tier": {"enum": ["anonymous", "lightweight", "full", "premium"]}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "agent_response": {
+      "required": ["session_id", "message"],
+      "properties": {
+        "session_id": {"type": "string", "format": "uuid"},
+        "message": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "string"},
+            "type": {"enum": ["text", "error", "system"]},
+            "content": {"type": "string"},
+            "citations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {"type": "string"},
+                  "module_id": {"type": "string"},
+                  "chapter_id": {"type": "string"},
+                  "section_id": {"type": "string"},
+                  "url": {"type": "string"},
+                  "excerpt": {"type": "string"}
+                }
+              }
+            },
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "mode": {"enum": ["full-corpus", "selected-text"]},
+                "retrieval_count": {"type": "integer"},
+                "synthesis_time_ms": {"type": "integer"},
+                "guardrails_passed": {"type": "boolean"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "system_message": {
+      "required": ["session_id", "message"],
+      "properties": {
+        "message": {
+          "type": "object",
+          "properties": {
+            "type": {"enum": ["info", "warning", "error"]},
+            "severity": {"enum": ["low", "medium", "high", "critical"]},
+            "content": {"type": "string"},
+            "action": {
+              "type": "object",
+              "properties": {
+                "type": {"enum": ["button", "link", "dismiss"]},
+                "label": {"type": "string"},
+                "event": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "signup_initiated": {
+      "required": ["session_id", "flow"],
+      "properties": {
+        "flow": {
+          "type": "object",
+          "properties": {
+            "type": {"enum": ["progressive_signup", "oauth", "magic_link"]},
+            "current_tier": {"enum": ["anonymous", "lightweight", "full", "premium"]},
+            "target_tier": {"enum": ["lightweight", "full", "premium"]},
+            "trigger": {"type": "string"}
+          }
+        }
+      }
+    },
+    "authentication_completed": {
+      "required": ["session_id", "auth"],
+      "properties": {
+        "auth": {
+          "type": "object",
+          "properties": {
+            "method": {"enum": ["email_password", "oauth_google", "oauth_github", "oauth_microsoft", "magic_link"]},
+            "user_id": {"type": "string", "format": "uuid"},
+            "tier": {"enum": ["lightweight", "full", "premium"]},
+            "session_token": {"type": "string"},
+            "expires_at": {"type": "string", "format": "date-time"}
+          }
+        }
+      }
+    },
+    "error": {
+      "required": ["session_id", "error"],
+      "properties": {
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {"type": "string"},
+            "message": {"type": "string"},
+            "severity": {"enum": ["recoverable", "fatal"]},
+            "retry_strategy": {
+              "type": "object",
+              "properties": {
+                "type": {"enum": ["exponential_backoff", "fixed_delay", "no_retry"]},
+                "max_retries": {"type": "integer"},
+                "initial_delay_ms": {"type": "integer"}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "widget_states": {
+    "allowed_states": ["Idle", "Typing", "Processing", "Responding", "Error", "SignupFlow"],
+    "initial_state": "Idle",
+    "transitions": {
+      "Idle": ["Typing", "SignupFlow"],
+      "Typing": ["Idle", "Processing"],
+      "Processing": ["Responding", "Error"],
+      "Responding": ["Idle"],
+      "Error": ["Idle"],
+      "SignupFlow": ["Idle"]
+    }
+  },
+  "compliance": {
+    "gdpr": {
+      "consent_required": true,
+      "data_export": true,
+      "data_deletion": true,
+      "retention_policy": "30_days_inactive"
+    },
+    "ccpa": {
+      "do_not_sell_opt_out": true,
+      "third_party_sharing": false
+    },
+    "ferpa": {
+      "age_gate": 13,
+      "parental_consent_under": 18,
+      "educational_records_encryption": "AES-256"
+    },
+    "coppa": {
+      "minimum_age": 13,
+      "parental_consent_required": true,
+      "under_13_features_disabled": ["social_sharing", "public_profiles", "third_party_analytics"]
+    }
+  },
+  "security": {
+    "input_sanitization": true,
+    "csrf_protection": true,
+    "rate_limiting": {
+      "messages_per_minute": 30,
+      "messages_per_hour": 100
+    },
+    "session_security": {
+      "jwt_access_token_ttl_minutes": 15,
+      "jwt_refresh_token_ttl_days": 7,
+      "cookie_flags": ["HttpOnly", "Secure", "SameSite=Strict"]
+    }
+  },
+  "performance": {
+    "bundle_size_targets": {
+      "tier_0_essential_kb": 15,
+      "tier_1_core_kb": 40,
+      "tier_2_enhanced_kb": 75,
+      "tier_3_premium_kb": 175
+    },
+    "load_time_targets": {
+      "tier_0_initial_load_ms": 100,
+      "tier_1_lazy_load_ms": 300,
+      "tier_2_lazy_load_ms": 500,
+      "tier_3_lazy_load_ms": 1000
+    }
+  },
+  "used_by_skills": [
+    "chatkit-widget"
+  ],
+  "used_by_agents": [],
+  "notes": "This MCP server provides design-time intelligence for chat widget integrations. It validates event schemas, state transitions, compliance rules, and performance budgets during spec-driven development phases."
+}

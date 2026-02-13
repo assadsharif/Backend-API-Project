@@ -1,0 +1,37 @@
+name: kubernetes-deployment
+version: "1.0.0"
+type: Builder
+domain: Kubernetes
+description: >
+  Generates production-grade Kubernetes Deployment, Service, and ConfigMap
+  manifests. Deterministic, schema-validated, zero external dependencies.
+author: k8s-deployment-skill
+
+capabilities:
+  - generate_deployment
+  - generate_service
+  - generate_configmap
+  - generate_stack
+  - validate_manifest
+
+input_schemas:
+  - DeploymentInput
+  - ServiceInput
+  - ConfigMapInput
+  - StackInput
+
+output_schemas:
+  - ManifestOutput
+  - ValidationResult
+
+dependencies:
+  - pyyaml>=6.0
+  - pydantic>=2.0
+
+mcp_server: k8s_deployment_mcp
+mcp_tools:
+  - k8s_generate_deployment
+  - k8s_generate_service
+  - k8s_generate_configmap
+  - k8s_generate_stack
+  - k8s_validate_manifest
