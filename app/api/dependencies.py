@@ -16,6 +16,7 @@ from ..models.user import RateLimitInfo, User
 from ..services.cache_service import CacheService
 from ..services.data_fetcher import DataFetcher
 from ..services.rate_limiter import RateLimiter
+from ..services.portfolio_service import PortfolioService
 from ..services.user_service import UserService
 from .errors import AccountDisabledError, AdminNotConfiguredError, AuthenticationError
 
@@ -33,6 +34,7 @@ _cache_service: CacheService | None = None
 _data_fetcher: DataFetcher | None = None
 _user_service: UserService | None = None
 _rate_limiter: RateLimiter | None = None
+_portfolio_service: PortfolioService | None = None
 
 
 def get_cache_service() -> CacheService:
@@ -76,6 +78,17 @@ def get_rate_limiter() -> RateLimiter:
             window_seconds=settings.RATE_LIMIT_WINDOW_SECONDS,
         )
     return _rate_limiter
+
+
+def get_portfolio_service() -> PortfolioService:
+    """Return the PortfolioService singleton."""
+    global _portfolio_service
+    if _portfolio_service is None:
+        _portfolio_service = PortfolioService(
+            data_file=settings.PORTFOLIO_DATA_FILE,
+            max_holdings=settings.PORTFOLIO_MAX_HOLDINGS,
+        )
+    return _portfolio_service
 
 
 def get_current_user(x_api_key: str = Header()) -> User:

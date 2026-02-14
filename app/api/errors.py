@@ -81,6 +81,33 @@ class AdminNotConfiguredError(Exception):
         super().__init__(self.message)
 
 
+class PortfolioFullError(Exception):
+    """Raised when adding a ticker to a full portfolio (HTTP 400)."""
+
+    def __init__(self, max_holdings: int = 20, message: str | None = None) -> None:
+        self.max_holdings = max_holdings
+        self.message = message or f"Portfolio is full. Maximum {max_holdings} tickers allowed."
+        super().__init__(self.message)
+
+
+class TickerAlreadyInPortfolioError(Exception):
+    """Raised when adding a ticker that already exists in portfolio (HTTP 409)."""
+
+    def __init__(self, ticker: str, message: str | None = None) -> None:
+        self.ticker = ticker
+        self.message = message or f"Ticker '{ticker}' is already in your portfolio."
+        super().__init__(self.message)
+
+
+class TickerNotInPortfolioError(Exception):
+    """Raised when removing a ticker not in the portfolio (HTTP 404)."""
+
+    def __init__(self, ticker: str, message: str | None = None) -> None:
+        self.ticker = ticker
+        self.message = message or f"Ticker '{ticker}' is not in your portfolio."
+        super().__init__(self.message)
+
+
 class DataSourceUnavailableError(Exception):
     """Raised when the external data source is unreachable (HTTP 503)."""
 
@@ -190,6 +217,44 @@ def register_error_handlers(app: FastAPI) -> None:
             content={
                 "error": "admin_not_configured",
                 "message": exc.message,
+            },
+        )
+
+    @app.exception_handler(PortfolioFullError)
+    async def portfolio_full_handler(
+        request: Request, exc: PortfolioFullError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "portfolio_full",
+                "message": exc.message,
+            },
+        )
+
+    @app.exception_handler(TickerAlreadyInPortfolioError)
+    async def ticker_already_in_portfolio_handler(
+        request: Request, exc: TickerAlreadyInPortfolioError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=409,
+            content={
+                "error": "ticker_already_in_portfolio",
+                "message": exc.message,
+                "ticker": exc.ticker,
+            },
+        )
+
+    @app.exception_handler(TickerNotInPortfolioError)
+    async def ticker_not_in_portfolio_handler(
+        request: Request, exc: TickerNotInPortfolioError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "error": "ticker_not_in_portfolio",
+                "message": exc.message,
+                "ticker": exc.ticker,
             },
         )
 

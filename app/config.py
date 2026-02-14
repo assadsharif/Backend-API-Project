@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     RATE_LIMIT_MAX_REQUESTS: int = Field(default=100, validation_alias="RATE_LIMIT_MAX_REQUESTS")
     RATE_LIMIT_WINDOW_SECONDS: int = Field(default=3600, validation_alias="RATE_LIMIT_WINDOW_SECONDS")
 
+    # Portfolio Configuration
+    PORTFOLIO_DATA_FILE: str = Field(default="data/portfolios.json", validation_alias="PORTFOLIO_DATA_FILE")
+    PORTFOLIO_MAX_HOLDINGS: int = Field(default=20, validation_alias="PORTFOLIO_MAX_HOLDINGS")
+
     # Logging Configuration
     LOG_LEVEL: str = Field(default="INFO", validation_alias="LOG_LEVEL")
 

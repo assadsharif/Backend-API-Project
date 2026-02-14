@@ -1,0 +1,289 @@
+openapi: "3.1.0"
+info:
+  title: Stock Signal API - Portfolio Tracking
+  version: "1.1.0"
+  description: Portfolio management endpoints for the Stock Signal API.
+
+paths:
+  /portfolio:
+    get:
+      operationId: getPortfolio
+      summary: List portfolio holdings
+      description: Returns the authenticated user's portfolio with all current holdings.
+      tags: [Portfolio]
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Portfolio holdings returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioResponse"
+        "401":
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /portfolio/add:
+    post:
+      operationId: addTicker
+      summary: Add a ticker to portfolio
+      description: Add a stock ticker to the authenticated user's portfolio. Maximum 20 tickers.
+      tags: [Portfolio]
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddTickerRequest"
+      responses:
+        "200":
+          description: Ticker added successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddTickerResponse"
+        "400":
+          description: Invalid ticker format or portfolio full (20 tickers max).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Ticker already in portfolio.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /portfolio/remove/{ticker}:
+    delete:
+      operationId: removeTicker
+      summary: Remove a ticker from portfolio
+      description: Remove a stock ticker from the authenticated user's portfolio.
+      tags: [Portfolio]
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: ticker
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z]{1,5}$"
+          description: Ticker symbol to remove (case-insensitive).
+      responses:
+        "200":
+          description: Ticker removed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RemoveTickerResponse"
+        "401":
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Ticker not found in portfolio.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /portfolio/signals:
+    get:
+      operationId: getPortfolioSignals
+      summary: Get signals for all portfolio holdings
+      description: >
+        Fetch trading signals for every ticker in the authenticated user's portfolio.
+        Returns partial results if some tickers fail. Includes a summary with signal breakdown.
+      tags: [Portfolio]
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Portfolio signals returned (may include partial failures).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioSignalsResponse"
+        "401":
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    PortfolioHolding:
+      type: object
+      required: [ticker, added_at]
+      properties:
+        ticker:
+          type: string
+          pattern: "^[A-Z]{1,5}$"
+          example: "AAPL"
+        added_at:
+          type: string
+          format: date-time
+          example: "2026-02-14T10:00:00Z"
+
+    AddTickerRequest:
+      type: object
+      required: [ticker]
+      properties:
+        ticker:
+          type: string
+          minLength: 1
+          maxLength: 5
+          example: "AAPL"
+          description: Stock ticker symbol (case-insensitive, normalized to uppercase).
+
+    PortfolioResponse:
+      type: object
+      required: [user_id, holdings, count, max_holdings]
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioHolding"
+          maxItems: 20
+        count:
+          type: integer
+          minimum: 0
+          maximum: 20
+        max_holdings:
+          type: integer
+          example: 20
+
+    AddTickerResponse:
+      type: object
+      required: [message, ticker, holdings, count]
+      properties:
+        message:
+          type: string
+          example: "AAPL added to portfolio."
+        ticker:
+          type: string
+          example: "AAPL"
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioHolding"
+        count:
+          type: integer
+
+    RemoveTickerResponse:
+      type: object
+      required: [message, ticker, holdings, count]
+      properties:
+        message:
+          type: string
+          example: "AAPL removed from portfolio."
+        ticker:
+          type: string
+          example: "AAPL"
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioHolding"
+        count:
+          type: integer
+
+    PortfolioSignalResult:
+      type: object
+      required: [ticker]
+      properties:
+        ticker:
+          type: string
+          example: "AAPL"
+        signal:
+          type: string
+          enum: [BUY, SELL, HOLD]
+          nullable: true
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+          nullable: true
+        current_price:
+          type: number
+          format: float
+          nullable: true
+        error:
+          type: string
+          nullable: true
+          description: Error message if signal fetch failed for this ticker.
+
+    PortfolioSummary:
+      type: object
+      required: [total_holdings, buy_count, sell_count, hold_count, error_count]
+      properties:
+        total_holdings:
+          type: integer
+        buy_count:
+          type: integer
+        sell_count:
+          type: integer
+        hold_count:
+          type: integer
+        error_count:
+          type: integer
+
+    PortfolioSignalsResponse:
+      type: object
+      required: [user_id, signals, summary, fetched_at]
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        signals:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioSignalResult"
+        summary:
+          $ref: "#/components/schemas/PortfolioSummary"
+        fetched_at:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+        message:
+          type: string

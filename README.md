@@ -12,6 +12,7 @@ Provides buy/sell/hold recommendations with confidence levels and reasoning base
 - **API Key Authentication**: Register for an API key, include via `X-API-Key` header
 - **Rate Limiting**: 100 requests/hour per API key with informative headers
 - **Admin Management**: List, disable/enable users, regenerate API keys
+- **Portfolio Tracking**: Manage a personal stock watchlist (max 20 tickers) with batch signal fetching
 - **Fast Response**: <2s for cached data, 15-minute cache TTL
 - **Graceful Degradation**: Handles data source failures and partial data
 
@@ -175,6 +176,36 @@ Each API key is limited to **100 requests per hour**. Rate limit info is returne
 
 When the limit is exceeded, a `429 Too Many Requests` response is returned.
 
+### Portfolio Endpoints
+
+Manage a personal stock watchlist and get signals for all holdings at once. **Requires authentication.** Maximum 20 tickers per portfolio.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/portfolio` | GET | List all holdings in your portfolio |
+| `/portfolio/add` | POST | Add a ticker (`{"ticker": "AAPL"}`) |
+| `/portfolio/remove/{ticker}` | DELETE | Remove a ticker |
+| `/portfolio/signals` | GET | Get trading signals for all holdings |
+
+```bash
+# Add a ticker
+curl -X POST http://localhost:8000/portfolio/add \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"ticker": "AAPL"}'
+
+# View portfolio
+curl -H "X-API-Key: YOUR_API_KEY" http://localhost:8000/portfolio
+
+# Get signals for all holdings
+curl -H "X-API-Key: YOUR_API_KEY" http://localhost:8000/portfolio/signals
+
+# Remove a ticker
+curl -X DELETE -H "X-API-Key: YOUR_API_KEY" http://localhost:8000/portfolio/remove/AAPL
+```
+
+The `/portfolio/signals` response includes a summary with signal breakdown (buy/sell/hold counts) and handles individual ticker failures gracefully.
+
 ### Admin Endpoints
 
 Admin endpoints require the `X-Admin-Key` header (set via `ADMIN_API_KEY` environment variable).
@@ -211,21 +242,24 @@ app/
 │   ├── stock.py         # Stock, PriceData, Exchange
 │   ├── indicator.py     # Indicators, MACD, SMA, EMA, IndicatorResponse
 │   ├── signal.py        # Signal, SignalAction
-│   └── user.py          # User, UserStatus, auth request/response models
+│   ├── user.py          # User, UserStatus, auth request/response models
+│   └── portfolio.py     # Portfolio, holdings, signals, summary models
 ├── services/
 │   ├── cache_service.py         # TTLCache with hit/miss stats
 │   ├── data_fetcher.py          # yfinance async wrapper with retry
 │   ├── indicator_calculator.py  # pandas-ta RSI/MACD/SMA/EMA
 │   ├── signal_generator.py      # Rule-based scoring + reasoning
 │   ├── user_service.py          # User CRUD with JSON persistence
-│   └── rate_limiter.py          # In-memory per-key rate limiting
+│   ├── rate_limiter.py          # In-memory per-key rate limiting
+│   └── portfolio_service.py     # Portfolio CRUD with JSON persistence
 ├── api/
 │   ├── routes/
 │   │   ├── health.py      # GET /health
 │   │   ├── signals.py     # GET /signal/{ticker} (auth + rate limit)
 │   │   ├── indicators.py  # GET /indicators/{ticker} (auth + rate limit)
 │   │   ├── auth.py        # POST /auth/register
-│   │   └── admin.py       # Admin user management endpoints
+│   │   ├── admin.py       # Admin user management endpoints
+│   │   └── portfolio.py   # Portfolio management + signals
 │   ├── dependencies.py    # DI singletons, auth & rate limit deps
 │   └── errors.py          # Custom exceptions + handlers
 └── utils/
@@ -268,11 +302,11 @@ cp .env.example .env
 
 ## Error Handling
 
-- **400**: Invalid ticker symbol
+- **400**: Invalid ticker symbol / Portfolio full (max 20 tickers)
 - **401**: Missing or invalid API key / admin key
 - **403**: Account disabled
-- **404**: Ticker not found / User not found
-- **409**: Email already registered
+- **404**: Ticker not found / User not found / Ticker not in portfolio
+- **409**: Email already registered / Ticker already in portfolio
 - **429**: Rate limit exceeded (with reset time)
 - **503**: Data source unavailable (with retry-after) / Admin key not configured
 
@@ -291,6 +325,8 @@ cp .env.example .env
 - **Quick Start Guide**: `specs/001-stock-signal-api/quickstart.md`
 - **Auth Spec**: `specs/002-user-authentication/spec.md`
 - **Auth API Contract**: `specs/002-user-authentication/contracts/openapi.yaml`
+- **Portfolio Spec**: `specs/003-portfolio-tracking/spec.md`
+- **Portfolio API Contract**: `specs/003-portfolio-tracking/contracts/openapi.yaml`
 
 ## License
 
