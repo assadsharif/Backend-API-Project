@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     RETRY_DELAY: float = 1.0  # Initial retry delay in seconds
     RETRY_BACKOFF: float = 2.0  # Exponential backoff multiplier
 
+    # Authentication Configuration
+    ADMIN_API_KEY: str | None = Field(default=None, validation_alias="ADMIN_API_KEY")
+    USER_DATA_FILE: str = Field(default="data/users.json", validation_alias="USER_DATA_FILE")
+    RATE_LIMIT_MAX_REQUESTS: int = Field(default=100, validation_alias="RATE_LIMIT_MAX_REQUESTS")
+    RATE_LIMIT_WINDOW_SECONDS: int = Field(default=3600, validation_alias="RATE_LIMIT_WINDOW_SECONDS")
+
     # Logging Configuration
     LOG_LEVEL: str = Field(default="INFO", validation_alias="LOG_LEVEL")
 

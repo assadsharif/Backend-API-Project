@@ -9,6 +9,9 @@ Provides buy/sell/hold recommendations with confidence levels and reasoning base
 - **Trading Signals**: Get buy/sell/hold signals for US stocks (NYSE, NASDAQ)
 - **Technical Indicators**: View RSI, MACD, SMA, and EMA calculations
 - **Signal Reasoning**: Understand why each signal was generated
+- **API Key Authentication**: Register for an API key, include via `X-API-Key` header
+- **Rate Limiting**: 100 requests/hour per API key with informative headers
+- **Admin Management**: List, disable/enable users, regenerate API keys
 - **Fast Response**: <2s for cached data, 15-minute cache TTL
 - **Graceful Degradation**: Handles data source failures and partial data
 
@@ -51,14 +54,17 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ### Quick Test
 
 ```bash
-# Health check
+# Health check (no auth required)
 curl http://localhost:8000/health
 
-# Get trading signal for Apple (AAPL)
-curl http://localhost:8000/signal/AAPL
+# Register for an API key
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Your Name", "email": "you@example.com"}'
 
-# View technical indicators
-curl http://localhost:8000/indicators/AAPL
+# Use the returned API key for authenticated endpoints
+curl -H "X-API-Key: YOUR_API_KEY" http://localhost:8000/signal/AAPL
+curl -H "X-API-Key: YOUR_API_KEY" http://localhost:8000/indicators/AAPL
 ```
 
 ## API Documentation
@@ -70,12 +76,33 @@ Once the server is running:
 
 ## API Endpoints
 
-### `/signal/{ticker}` - Get Trading Signal
+### `POST /auth/register` - Register for API Key
 
-Returns buy/sell/hold signal with confidence level and reasoning.
+Register a new user and receive an API key.
 
 ```bash
-curl http://localhost:8000/signal/AAPL
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Jane Doe", "email": "jane@example.com"}'
+```
+
+Response (201):
+```json
+{
+  "id": "a1b2c3d4-...",
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "api_key": "ab12cd34ef56gh78ij90kl12mn34op56",
+  "message": "Registration successful. Save your API key — it will not be shown again."
+}
+```
+
+### `/signal/{ticker}` - Get Trading Signal
+
+Returns buy/sell/hold signal with confidence level and reasoning. **Requires authentication.**
+
+```bash
+curl -H "X-API-Key: YOUR_API_KEY" http://localhost:8000/signal/AAPL
 ```
 
 Response:
@@ -99,10 +126,10 @@ Response:
 
 ### `/indicators/{ticker}` - Get Technical Indicators
 
-Returns calculated technical indicators without generating a signal.
+Returns calculated technical indicators without generating a signal. **Requires authentication.**
 
 ```bash
-curl http://localhost:8000/indicators/AAPL
+curl -H "X-API-Key: YOUR_API_KEY" http://localhost:8000/indicators/AAPL
 ```
 
 Response:
@@ -128,6 +155,43 @@ Returns service health status and data source availability.
 curl http://localhost:8000/health
 ```
 
+## Authentication
+
+All endpoints except `/health`, `/docs`, `/redoc`, `/openapi.json`, and `/` require an API key via the `X-API-Key` header.
+
+1. **Register**: `POST /auth/register` with `{"name": "...", "email": "..."}` to get an API key
+2. **Authenticate**: Include `X-API-Key: YOUR_KEY` header on all `/signal` and `/indicators` requests
+3. **Errors**: 401 for missing/invalid key, 403 for disabled accounts
+
+### Rate Limiting
+
+Each API key is limited to **100 requests per hour**. Rate limit info is returned in response headers:
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests per window (100) |
+| `X-RateLimit-Remaining` | Requests remaining in current window |
+| `X-RateLimit-Reset` | UTC timestamp when the window resets |
+
+When the limit is exceeded, a `429 Too Many Requests` response is returned.
+
+### Admin Endpoints
+
+Admin endpoints require the `X-Admin-Key` header (set via `ADMIN_API_KEY` environment variable).
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/admin/users` | GET | List all registered users |
+| `/admin/users/{id}` | GET | Get user details |
+| `/admin/users/{id}/disable` | POST | Disable a user account |
+| `/admin/users/{id}/enable` | POST | Re-enable a user account |
+| `/admin/users/{id}/regenerate-key` | POST | Generate new API key (old key invalidated) |
+
+```bash
+# Example: list all users
+curl -H "X-Admin-Key: YOUR_ADMIN_KEY" http://localhost:8000/admin/users
+```
+
 ## Technical Stack
 
 - **Language**: Python 3.11+
@@ -142,27 +206,33 @@ curl http://localhost:8000/health
 ```
 app/
 ├── main.py              # FastAPI app, CORS, response-time middleware
-├── config.py            # Pydantic settings (cache, indicators, thresholds)
+├── config.py            # Pydantic settings (cache, indicators, auth)
 ├── models/
 │   ├── stock.py         # Stock, PriceData, Exchange
 │   ├── indicator.py     # Indicators, MACD, SMA, EMA, IndicatorResponse
-│   └── signal.py        # Signal, SignalAction
+│   ├── signal.py        # Signal, SignalAction
+│   └── user.py          # User, UserStatus, auth request/response models
 ├── services/
 │   ├── cache_service.py         # TTLCache with hit/miss stats
 │   ├── data_fetcher.py          # yfinance async wrapper with retry
 │   ├── indicator_calculator.py  # pandas-ta RSI/MACD/SMA/EMA
-│   └── signal_generator.py      # Rule-based scoring + reasoning
+│   ├── signal_generator.py      # Rule-based scoring + reasoning
+│   ├── user_service.py          # User CRUD with JSON persistence
+│   └── rate_limiter.py          # In-memory per-key rate limiting
 ├── api/
 │   ├── routes/
 │   │   ├── health.py      # GET /health
-│   │   ├── signals.py     # GET /signal/{ticker}
-│   │   └── indicators.py  # GET /indicators/{ticker}
-│   ├── dependencies.py    # DI singletons
+│   │   ├── signals.py     # GET /signal/{ticker} (auth + rate limit)
+│   │   ├── indicators.py  # GET /indicators/{ticker} (auth + rate limit)
+│   │   ├── auth.py        # POST /auth/register
+│   │   └── admin.py       # Admin user management endpoints
+│   ├── dependencies.py    # DI singletons, auth & rate limit deps
 │   └── errors.py          # Custom exceptions + handlers
 └── utils/
     ├── validators.py      # Ticker validation
     └── logging.py         # JSON structured logging
 
+data/                    # User data (gitignored)
 tests/
 ├── unit/                # Unit tests
 ├── integration/         # Integration tests
@@ -199,8 +269,12 @@ cp .env.example .env
 ## Error Handling
 
 - **400**: Invalid ticker symbol
-- **404**: Ticker not found
-- **503**: Data source unavailable (with retry-after)
+- **401**: Missing or invalid API key / admin key
+- **403**: Account disabled
+- **404**: Ticker not found / User not found
+- **409**: Email already registered
+- **429**: Rate limit exceeded (with reset time)
+- **503**: Data source unavailable (with retry-after) / Admin key not configured
 
 ## Limitations (MVP)
 
@@ -215,6 +289,8 @@ cp .env.example .env
 - **Implementation Plan**: `specs/001-stock-signal-api/plan.md`
 - **API Contract**: `specs/001-stock-signal-api/contracts/openapi.yaml`
 - **Quick Start Guide**: `specs/001-stock-signal-api/quickstart.md`
+- **Auth Spec**: `specs/002-user-authentication/spec.md`
+- **Auth API Contract**: `specs/002-user-authentication/contracts/openapi.yaml`
 
 ## License
 

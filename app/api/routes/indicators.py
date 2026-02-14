@@ -8,14 +8,15 @@ Implements T027-T030: endpoint, reuse IndicatorCalculator, caching, error handli
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 
 from ...models.indicator import IndicatorResponse
+from ...models.user import RateLimitInfo
 from ...services.cache_service import CacheService
 from ...services.data_fetcher import DataFetcher
 from ...services.indicator_calculator import IndicatorCalculator
 from ...utils.validators import TickerValidationError, validate_ticker
-from ..dependencies import get_cache_service, get_data_fetcher
+from ..dependencies import check_rate_limit, get_cache_service, get_data_fetcher
 from ..errors import InvalidTickerError
 
 logger = logging.getLogger("app.api.indicators")
@@ -38,6 +39,8 @@ _indicator_calculator = IndicatorCalculator()
 )
 async def get_indicators(
     ticker: str,
+    response: Response,
+    rate_limit_info: RateLimitInfo = Depends(check_rate_limit),
     cache: CacheService = Depends(get_cache_service),
     data_fetcher: DataFetcher = Depends(get_data_fetcher),
 ) -> IndicatorResponse:
@@ -60,6 +63,9 @@ async def get_indicators(
     cached = cache.get(cache_key)
     if cached is not None:
         logger.info("Cache hit for indicators:%s", ticker)
+        response.headers["X-RateLimit-Limit"] = str(rate_limit_info.limit)
+        response.headers["X-RateLimit-Remaining"] = str(rate_limit_info.remaining)
+        response.headers["X-RateLimit-Reset"] = str(int(rate_limit_info.reset_at.timestamp()))
         return cached
 
     # Fetch historical data (raises 404 / 503 from data_fetcher)
@@ -71,7 +77,7 @@ async def get_indicators(
 
     now = datetime.now(timezone.utc)
 
-    response = IndicatorResponse(
+    indicator_response = IndicatorResponse(
         ticker=ticker,
         calculated_at=now,
         current_price=current_price,
@@ -79,7 +85,12 @@ async def get_indicators(
     )
 
     # Store in cache
-    cache.set(cache_key, response)
+    cache.set(cache_key, indicator_response)
     logger.info("Indicators calculated for %s", ticker)
 
-    return response
+    # Inject rate limit headers
+    response.headers["X-RateLimit-Limit"] = str(rate_limit_info.limit)
+    response.headers["X-RateLimit-Remaining"] = str(rate_limit_info.remaining)
+    response.headers["X-RateLimit-Reset"] = str(int(rate_limit_info.reset_at.timestamp()))
+
+    return indicator_response

@@ -33,6 +33,54 @@ class TickerNotFoundError(Exception):
         super().__init__(self.message)
 
 
+class AuthenticationError(Exception):
+    """Raised when API key is missing or invalid (HTTP 401)."""
+
+    def __init__(self, message: str | None = None) -> None:
+        self.message = message or "Valid API key required. Include X-API-Key header."
+        super().__init__(self.message)
+
+
+class AccountDisabledError(Exception):
+    """Raised when a disabled user's API key is used (HTTP 403)."""
+
+    def __init__(self, message: str | None = None) -> None:
+        self.message = message or "Account has been disabled. Contact administrator."
+        super().__init__(self.message)
+
+
+class RateLimitExceededError(Exception):
+    """Raised when API key exceeds rate limit (HTTP 429)."""
+
+    def __init__(
+        self,
+        retry_after: int = 3600,
+        reset_at: str | None = None,
+        message: str | None = None,
+    ) -> None:
+        self.retry_after = retry_after
+        self.reset_at = reset_at
+        self.message = message or "Rate limit exceeded. 100 requests per hour."
+        super().__init__(self.message)
+
+
+class EmailConflictError(Exception):
+    """Raised when registering with an already-used email (HTTP 409)."""
+
+    def __init__(self, email: str, message: str | None = None) -> None:
+        self.email = email
+        self.message = message or f"Email '{email}' is already registered."
+        super().__init__(self.message)
+
+
+class AdminNotConfiguredError(Exception):
+    """Raised when admin endpoints are called but ADMIN_API_KEY is not set (HTTP 503)."""
+
+    def __init__(self, message: str | None = None) -> None:
+        self.message = message or "Admin functionality is not configured."
+        super().__init__(self.message)
+
+
 class DataSourceUnavailableError(Exception):
     """Raised when the external data source is unreachable (HTTP 503)."""
 
@@ -77,6 +125,71 @@ def register_error_handlers(app: FastAPI) -> None:
                 "error": "ticker_not_found",
                 "message": exc.message,
                 "ticker": exc.ticker,
+            },
+        )
+
+    @app.exception_handler(AuthenticationError)
+    async def authentication_error_handler(
+        request: Request, exc: AuthenticationError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=401,
+            content={
+                "error": "authentication_required",
+                "message": exc.message,
+            },
+        )
+
+    @app.exception_handler(AccountDisabledError)
+    async def account_disabled_handler(
+        request: Request, exc: AccountDisabledError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=403,
+            content={
+                "error": "account_disabled",
+                "message": exc.message,
+            },
+        )
+
+    @app.exception_handler(RateLimitExceededError)
+    async def rate_limit_handler(
+        request: Request, exc: RateLimitExceededError
+    ) -> JSONResponse:
+        content: dict = {
+            "error": "rate_limit_exceeded",
+            "message": exc.message,
+            "retry_after": exc.retry_after,
+        }
+        if exc.reset_at:
+            content["reset_at"] = exc.reset_at
+        return JSONResponse(
+            status_code=429,
+            content=content,
+            headers={"Retry-After": str(exc.retry_after)},
+        )
+
+    @app.exception_handler(EmailConflictError)
+    async def email_conflict_handler(
+        request: Request, exc: EmailConflictError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=409,
+            content={
+                "error": "email_already_registered",
+                "message": exc.message,
+            },
+        )
+
+    @app.exception_handler(AdminNotConfiguredError)
+    async def admin_not_configured_handler(
+        request: Request, exc: AdminNotConfiguredError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "error": "admin_not_configured",
+                "message": exc.message,
             },
         )
 

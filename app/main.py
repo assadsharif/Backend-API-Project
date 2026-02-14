@@ -12,6 +12,8 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.errors import register_error_handlers
+from app.api.routes.admin import router as admin_router
+from app.api.routes.auth import router as auth_router
 from app.api.routes.health import router as health_router
 from app.api.routes.indicators import router as indicators_router
 from app.api.routes.signals import router as signals_router
@@ -83,8 +85,10 @@ register_error_handlers(app)
 
 # Register routers
 app.include_router(health_router)
+app.include_router(auth_router)
 app.include_router(signals_router)
 app.include_router(indicators_router)
+app.include_router(admin_router)
 
 
 # Root endpoint

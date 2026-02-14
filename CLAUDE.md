@@ -212,6 +212,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 ## Active Technologies
 - Python 3.11+ + FastAPI 0.100+ (REST API), yfinance 0.2.40+ (data source), pandas-ta 0.3.14+ (indicators), Pydantic 2.0+ (validation), cachetools 5.3+ (caching) (001-stock-signal-api)
 - In-memory TTL cache (cachetools) with 15-minute expiry; No persistent database for MVP (001-stock-signal-api)
+- Python 3.11+ (matches existing codebase) + FastAPI 0.100.0 (existing), Pydantic 2.0 (existing), pydantic-settings 2.0 (existing) — no new external dependencies (002-user-authentication)
+- JSON file (`data/users.json`) for user persistence; in-memory dict for rate limit tracking (002-user-authentication)
 
 ## Recent Changes
 - 001-stock-signal-api: Added Python 3.11+ + FastAPI 0.100+ (REST API), yfinance 0.2.40+ (data source), pandas-ta 0.3.14+ (indicators), Pydantic 2.0+ (validation), cachetools 5.3+ (caching)

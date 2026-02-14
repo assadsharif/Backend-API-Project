@@ -4,15 +4,32 @@ Tests the full HTTP request → response cycle using FastAPI TestClient
 with a mocked DataFetcher to avoid hitting Yahoo Finance.
 """
 
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.dependencies import get_data_fetcher
+from app.api.dependencies import check_rate_limit, get_current_user, get_data_fetcher
+from app.models.user import RateLimitInfo
 from app.api.errors import DataSourceUnavailableError, TickerNotFoundError
 from app.main import app
+from app.models.user import User, UserStatus
 from tests.fixtures.sample_data import BULLISH_200D, NEUTRAL_200D, SHORT_50D
+
+
+def _mock_user() -> User:
+    """Return a mock authenticated user for tests."""
+    return User(
+        id="test-user-id",
+        name="Test User",
+        email="test@example.com",
+        api_key="a" * 32,
+        status=UserStatus.ACTIVE,
+        created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        last_active_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        request_count=0,
+    )
 
 
 @pytest.fixture()
@@ -22,8 +39,17 @@ def client():
     import app.api.dependencies as deps
     deps._cache_service = None
     deps._data_fetcher = None
+    # Override auth and rate limit dependencies so existing tests pass without API keys
+    app.dependency_overrides[get_current_user] = _mock_user
+    app.dependency_overrides[check_rate_limit] = lambda: RateLimitInfo(
+        limit=100,
+        remaining=99,
+        reset_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+    )
     with TestClient(app) as c:
         yield c
+    app.dependency_overrides.pop(get_current_user, None)
+    app.dependency_overrides.pop(check_rate_limit, None)
     deps._cache_service = None
     deps._data_fetcher = None
 

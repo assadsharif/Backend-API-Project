@@ -8,15 +8,16 @@ Implements T020-T023: endpoint, caching, error handling, graceful degradation.
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 
 from ...models.signal import Signal
+from ...models.user import RateLimitInfo
 from ...services.cache_service import CacheService
 from ...services.data_fetcher import DataFetcher
 from ...services.indicator_calculator import IndicatorCalculator
 from ...services.signal_generator import SignalGenerator
 from ...utils.validators import TickerValidationError, validate_ticker
-from ..dependencies import get_cache_service, get_data_fetcher
+from ..dependencies import check_rate_limit, get_cache_service, get_current_user, get_data_fetcher
 from ..errors import InvalidTickerError
 
 logger = logging.getLogger("app.api.signals")
@@ -41,6 +42,8 @@ _signal_generator = SignalGenerator()
 )
 async def get_signal(
     ticker: str,
+    response: Response,
+    rate_limit_info: RateLimitInfo = Depends(check_rate_limit),
     cache: CacheService = Depends(get_cache_service),
     data_fetcher: DataFetcher = Depends(get_data_fetcher),
 ) -> Signal:
@@ -64,6 +67,9 @@ async def get_signal(
     cached = cache.get(cache_key)
     if cached is not None:
         logger.info("Cache hit for %s", ticker)
+        response.headers["X-RateLimit-Limit"] = str(rate_limit_info.limit)
+        response.headers["X-RateLimit-Remaining"] = str(rate_limit_info.remaining)
+        response.headers["X-RateLimit-Reset"] = str(int(rate_limit_info.reset_at.timestamp()))
         return cached
 
     # Fetch historical data — raises TickerNotFoundError (404) or
@@ -113,5 +119,10 @@ async def get_signal(
         result.confidence,
         result.score,
     )
+
+    # Inject rate limit headers
+    response.headers["X-RateLimit-Limit"] = str(rate_limit_info.limit)
+    response.headers["X-RateLimit-Remaining"] = str(rate_limit_info.remaining)
+    response.headers["X-RateLimit-Reset"] = str(int(rate_limit_info.reset_at.timestamp()))
 
     return signal

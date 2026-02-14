@@ -1,0 +1,404 @@
+openapi: 3.1.0
+info:
+  title: Stock Signal API - Authentication Extension
+  version: 2.0.0
+  description: |
+    Authentication, rate limiting, and admin management endpoints
+    extending the Stock Signal API.
+
+paths:
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register a new user
+      description: Create a new account and receive an API key.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistrationResponse'
+        '400':
+          description: Invalid input (name or email validation failed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: List all users
+      description: Returns all registered users with their details (excluding API keys).
+      operationId: listUsers
+      security:
+        - AdminKeyAuth: []
+      responses:
+        '200':
+          description: List of all users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+        '401':
+          description: Missing or invalid admin key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Admin not configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/users/{user_id}:
+    get:
+      tags: [Admin]
+      summary: Get user details
+      description: Returns detailed information about a specific user.
+      operationId: getUser
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailResponse'
+        '401':
+          description: Missing or invalid admin key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/users/{user_id}/disable:
+    post:
+      tags: [Admin]
+      summary: Disable a user account
+      description: Disables the user. Their API key immediately stops working.
+      operationId: disableUser
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailResponse'
+        '401':
+          description: Missing or invalid admin key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/users/{user_id}/enable:
+    post:
+      tags: [Admin]
+      summary: Enable a user account
+      description: Re-enables a previously disabled user account.
+      operationId: enableUser
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailResponse'
+        '401':
+          description: Missing or invalid admin key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/users/{user_id}/regenerate-key:
+    post:
+      tags: [Admin]
+      summary: Regenerate user API key
+      description: Generates a new API key for the user. The old key is immediately invalidated.
+      operationId: regenerateUserKey
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: New API key generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminKeyRegenerateResponse'
+        '401':
+          description: Missing or invalid admin key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Existing endpoints now require API key authentication:
+  /signal/{ticker}:
+    get:
+      tags: [Signals]
+      summary: Get trading signal (now requires authentication)
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Signal response (unchanged from v1)
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: Max requests per hour
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current window
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              description: Unix timestamp when the window resets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+  /indicators/{ticker}:
+    get:
+      tags: [Indicators]
+      summary: Get technical indicators (now requires authentication)
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: ticker
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Indicators response (unchanged from v1)
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: User API key obtained from /auth/register
+    AdminKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Admin-Key
+      description: Master admin key configured via ADMIN_API_KEY env var
+
+  schemas:
+    UserRegistrationRequest:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: User display name
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: User email address (must be unique)
+          example: "john@example.com"
+
+    UserRegistrationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        api_key:
+          type: string
+          description: "API key (shown ONCE at registration). 32 hex characters."
+          example: "a1b2c3d4e5f67890a1b2c3d4e5f67890"
+        status:
+          type: string
+          enum: [active]
+        created_at:
+          type: string
+          format: date-time
+        message:
+          type: string
+          example: "Registration successful. Store your API key securely — it will not be shown again."
+
+    UserDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        status:
+          type: string
+          enum: [active, disabled]
+        created_at:
+          type: string
+          format: date-time
+        last_active_at:
+          type: string
+          format: date-time
+        request_count:
+          type: integer
+
+    UserListResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserDetailResponse'
+        total:
+          type: integer
+
+    AdminKeyRegenerateResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        new_api_key:
+          type: string
+          example: "f6e5d4c3b2a19087f6e5d4c3b2a19087"
+        message:
+          type: string
+          example: "API key regenerated. Old key is immediately invalid."
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+        message:
+          type: string
+          description: Human-readable error message
+
+    RateLimitError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "rate_limit_exceeded"
+        message:
+          type: string
+          example: "Rate limit exceeded. 100 requests per hour."
+        retry_after:
+          type: integer
+          description: Seconds until rate limit resets
+        reset_at:
+          type: string
+          format: date-time
+          description: UTC timestamp when the window resets

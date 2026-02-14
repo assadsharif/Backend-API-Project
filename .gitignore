@@ -60,6 +60,9 @@ htmlcov/
 # Packaged skills
 *.skill
 
+# User data (JSON persistence)
+data/
+
 # Credentials / secrets
 Inbox/credentials/
 **/gmail_credentials.json
