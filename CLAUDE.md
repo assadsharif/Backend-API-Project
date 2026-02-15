@@ -216,6 +216,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 - JSON file (`data/users.json`) for user persistence; in-memory dict for rate limit tracking (002-user-authentication)
 - Python 3.11+ (matches existing codebase) + FastAPI 0.100.0 (existing), Pydantic 2.0 (existing) — no new external dependencies (003-portfolio-tracking)
 - JSON file (`data/portfolios.json`) for portfolio persistence; reuses existing signal cache (003-portfolio-tracking)
+- Python 3.11+ (matches existing project) + FastAPI 0.100+, Pydantic 2.0+, yfinance 0.2.40+, cachetools 5.3+ (004-alerts-notifications)
+- JSON file (`data/alerts.json`) with thread-safe atomic writes (same pattern as `portfolios.json` and `users.json`) (004-alerts-notifications)
 
 ## Recent Changes
 - 001-stock-signal-api: Added Python 3.11+ + FastAPI 0.100+ (REST API), yfinance 0.2.40+ (data source), pandas-ta 0.3.14+ (indicators), Pydantic 2.0+ (validation), cachetools 5.3+ (caching)
