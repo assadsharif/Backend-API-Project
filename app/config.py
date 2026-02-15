@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     PORTFOLIO_DATA_FILE: str = Field(default="data/portfolios.json", validation_alias="PORTFOLIO_DATA_FILE")
     PORTFOLIO_MAX_HOLDINGS: int = Field(default=20, validation_alias="PORTFOLIO_MAX_HOLDINGS")
 
+    # Alerts Configuration
+    ALERTS_DATA_FILE: str = Field(default="data/alerts.json", validation_alias="ALERTS_DATA_FILE")
+    ALERTS_MAX_PER_USER: int = Field(default=10, validation_alias="ALERTS_MAX_PER_USER")
+
     # Logging Configuration
     LOG_LEVEL: str = Field(default="INFO", validation_alias="LOG_LEVEL")
 

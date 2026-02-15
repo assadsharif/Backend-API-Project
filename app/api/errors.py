@@ -108,6 +108,40 @@ class TickerNotInPortfolioError(Exception):
         super().__init__(self.message)
 
 
+class AlertLimitExceededError(Exception):
+    """Raised when a user tries to create more alerts than the limit allows (HTTP 400)."""
+
+    def __init__(
+        self, current_count: int = 10, max_allowed: int = 10, message: str | None = None
+    ) -> None:
+        self.current_count = current_count
+        self.max_allowed = max_allowed
+        self.message = message or (
+            f"Maximum of {max_allowed} alerts reached. "
+            "Delete an existing alert before creating a new one."
+        )
+        super().__init__(self.message)
+
+
+class AlertNotFoundError(Exception):
+    """Raised when an alert ID is not found or doesn't belong to the user (HTTP 404)."""
+
+    def __init__(self, alert_id: str, message: str | None = None) -> None:
+        self.alert_id = alert_id
+        self.message = message or "Alert not found"
+        super().__init__(self.message)
+
+
+class PortfolioRequiredError(Exception):
+    """Raised when a portfolio_value alert is created without a portfolio (HTTP 400)."""
+
+    def __init__(self, message: str | None = None) -> None:
+        self.message = message or (
+            "Portfolio value alerts require an existing portfolio. Add holdings first."
+        )
+        super().__init__(self.message)
+
+
 class DataSourceUnavailableError(Exception):
     """Raised when the external data source is unreachable (HTTP 503)."""
 
@@ -255,6 +289,45 @@ def register_error_handlers(app: FastAPI) -> None:
                 "error": "ticker_not_in_portfolio",
                 "message": exc.message,
                 "ticker": exc.ticker,
+            },
+        )
+
+    @app.exception_handler(AlertLimitExceededError)
+    async def alert_limit_exceeded_handler(
+        request: Request, exc: AlertLimitExceededError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "alert_limit_exceeded",
+                "message": exc.message,
+                "current_count": exc.current_count,
+                "max_allowed": exc.max_allowed,
+            },
+        )
+
+    @app.exception_handler(AlertNotFoundError)
+    async def alert_not_found_handler(
+        request: Request, exc: AlertNotFoundError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "error": "alert_not_found",
+                "message": exc.message,
+                "alert_id": exc.alert_id,
+            },
+        )
+
+    @app.exception_handler(PortfolioRequiredError)
+    async def portfolio_required_handler(
+        request: Request, exc: PortfolioRequiredError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "portfolio_required",
+                "message": exc.message,
             },
         )
 
