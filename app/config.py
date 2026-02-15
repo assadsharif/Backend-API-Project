@@ -45,6 +45,10 @@ class Settings(BaseSettings):
     ALERTS_DATA_FILE: str = Field(default="data/alerts.json", validation_alias="ALERTS_DATA_FILE")
     ALERTS_MAX_PER_USER: int = Field(default=10, validation_alias="ALERTS_MAX_PER_USER")
 
+    # Webhook Configuration
+    WEBHOOK_DATA_FILE: str = Field(default="data/webhooks.json", validation_alias="WEBHOOK_DATA_FILE")
+    WEBHOOK_MAX_DELIVERIES: int = Field(default=50, validation_alias="WEBHOOK_MAX_DELIVERIES")
+
     # Logging Configuration
     LOG_LEVEL: str = Field(default="INFO", validation_alias="LOG_LEVEL")
 

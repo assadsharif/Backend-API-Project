@@ -142,6 +142,23 @@ class PortfolioRequiredError(Exception):
         super().__init__(self.message)
 
 
+class WebhookNotFoundError(Exception):
+    """Raised when no webhook is configured for the user (HTTP 404)."""
+
+    def __init__(self, message: str | None = None) -> None:
+        self.message = message or "No webhook configured for this account"
+        super().__init__(self.message)
+
+
+class InvalidWebhookUrlError(Exception):
+    """Raised when a webhook URL is not a valid HTTP/HTTPS URL (HTTP 400)."""
+
+    def __init__(self, url: str, message: str | None = None) -> None:
+        self.url = url
+        self.message = message or "Invalid webhook URL. Must be a valid HTTP or HTTPS URL."
+        super().__init__(self.message)
+
+
 class DataSourceUnavailableError(Exception):
     """Raised when the external data source is unreachable (HTTP 503)."""
 
@@ -328,6 +345,31 @@ def register_error_handlers(app: FastAPI) -> None:
             content={
                 "error": "portfolio_required",
                 "message": exc.message,
+            },
+        )
+
+    @app.exception_handler(WebhookNotFoundError)
+    async def webhook_not_found_handler(
+        request: Request, exc: WebhookNotFoundError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "error": "webhook_not_found",
+                "message": exc.message,
+            },
+        )
+
+    @app.exception_handler(InvalidWebhookUrlError)
+    async def invalid_webhook_url_handler(
+        request: Request, exc: InvalidWebhookUrlError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "invalid_webhook_url",
+                "message": exc.message,
+                "url": exc.url,
             },
         )
 

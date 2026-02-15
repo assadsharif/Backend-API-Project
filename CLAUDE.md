@@ -218,6 +218,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 - JSON file (`data/portfolios.json`) for portfolio persistence; reuses existing signal cache (003-portfolio-tracking)
 - Python 3.11+ (matches existing project) + FastAPI 0.100+, Pydantic 2.0+, yfinance 0.2.40+, cachetools 5.3+ (004-alerts-notifications)
 - JSON file (`data/alerts.json`) with thread-safe atomic writes (same pattern as `portfolios.json` and `users.json`) (004-alerts-notifications)
+- Python 3.11+ (matches existing codebase) + FastAPI 0.100.0 (existing), Pydantic 2.0 (existing), httpx 0.27.0 (existing — for outgoing webhook HTTP requests), Python stdlib `hmac`/`hashlib` (for HMAC-SHA256) (005-webhooks-notifications)
+- JSON file (`data/webhooks.json`) — same atomic write pattern as users.json, portfolios.json, alerts.json (005-webhooks-notifications)
 
 ## Recent Changes
 - 001-stock-signal-api: Added Python 3.11+ + FastAPI 0.100+ (REST API), yfinance 0.2.40+ (data source), pandas-ta 0.3.14+ (indicators), Pydantic 2.0+ (validation), cachetools 5.3+ (caching)

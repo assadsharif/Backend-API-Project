@@ -17,6 +17,7 @@ from app.api.dependencies import (
     get_current_user,
     get_data_fetcher,
     get_portfolio_service,
+    get_webhook_service,
 )
 from app.api.errors import InvalidTickerError, PortfolioRequiredError
 from app.config import settings
@@ -34,6 +35,7 @@ from app.services.alert_service import AlertService
 from app.services.data_fetcher import DataFetcher
 from app.services.indicator_calculator import IndicatorCalculator
 from app.services.portfolio_service import PortfolioService
+from app.services.webhook_service import WebhookService
 from app.services.signal_generator import SignalGenerator
 from app.utils.validators import TickerValidationError, validate_ticker
 
@@ -69,6 +71,7 @@ async def get_triggered_alerts(
     alert_service: AlertService = Depends(get_alert_service),
     data_fetcher: DataFetcher = Depends(get_data_fetcher),
     portfolio_service: PortfolioService = Depends(get_portfolio_service),
+    webhook_service: WebhookService = Depends(get_webhook_service),
 ) -> TriggeredAlertsResponse:
     """Check all alerts for the authenticated user and return evaluation results."""
     now = datetime.now(timezone.utc)
@@ -94,6 +97,23 @@ async def get_triggered_alerts(
         summary.triggered_count,
         summary.error_count,
     )
+
+    # Deliver triggered alerts to webhook if configured
+    if summary.triggered_count > 0:
+        try:
+            config = webhook_service.get_config(current_user.id)
+            if config is not None and config.is_active:
+                payload = webhook_service.build_payload(
+                    current_user.id, results, now
+                )
+                webhook_service.deliver(
+                    current_user.id, payload, config.url, config.secret
+                )
+        except Exception:
+            logger.exception(
+                "Webhook delivery failed for user %s (non-fatal)",
+                current_user.id,
+            )
 
     return TriggeredAlertsResponse(
         user_id=current_user.id,

@@ -19,6 +19,7 @@ from ..services.rate_limiter import RateLimiter
 from ..services.alert_service import AlertService
 from ..services.portfolio_service import PortfolioService
 from ..services.user_service import UserService
+from ..services.webhook_service import WebhookService
 from .errors import AccountDisabledError, AdminNotConfiguredError, AuthenticationError
 
 logger = logging.getLogger("app.api.dependencies")
@@ -37,6 +38,7 @@ _user_service: UserService | None = None
 _rate_limiter: RateLimiter | None = None
 _portfolio_service: PortfolioService | None = None
 _alert_service: AlertService | None = None
+_webhook_service: WebhookService | None = None
 
 
 def get_cache_service() -> CacheService:
@@ -102,6 +104,17 @@ def get_alert_service() -> AlertService:
             max_per_user=settings.ALERTS_MAX_PER_USER,
         )
     return _alert_service
+
+
+def get_webhook_service() -> WebhookService:
+    """Return the WebhookService singleton."""
+    global _webhook_service
+    if _webhook_service is None:
+        _webhook_service = WebhookService(
+            data_file=settings.WEBHOOK_DATA_FILE,
+            max_deliveries=settings.WEBHOOK_MAX_DELIVERIES,
+        )
+    return _webhook_service
 
 
 def get_current_user(x_api_key: str = Header()) -> User:
